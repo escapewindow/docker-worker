@@ -4,6 +4,7 @@
  * consumers can validate the environment that the task ran in and what was
  * produce. This artifact is then (openpgp) signed.
  */
+const assert = require('assert');
 const crypto = require('crypto');
 const stream = require('stream');
 const openpgp = require('openpgp');
@@ -29,6 +30,8 @@ class ChainOfTrust {
     this.key = openpgp.key.readArmored(armoredKey).keys;
     this.ed25519Key = Buffer.from(await new Promise((accept, reject) =>
       fs.readFile(task.runtime.ed25519SigningKeyLocation, 'ascii', (err, data) => err ? reject(err) : accept(data))), 'base64');
+
+    assert(!task.runtime.dockerConfig.allowPrivileged, "Privileged containers can't run on chain of trust enabled workers!")
 
     this.file = new temporary.File();
     debug(`created temporary file: ${this.file.path}`);
